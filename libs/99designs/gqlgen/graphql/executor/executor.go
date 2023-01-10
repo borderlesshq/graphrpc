@@ -70,11 +70,13 @@ func (e *Executor) CreateOperationContext(ctx context.Context, params *graphql.R
 		return rc, gqlerror.List{gqlerror.Errorf("operation %s not found", params.OperationName)}
 	}
 
-	var err *gqlerror.Error
+	var err error
 	rc.Variables, err = validator.VariableValues(e.es.Schema(), rc.Operation, params.Variables)
 	if err != nil {
-		errcode.Set(err, errcode.ValidationFailed)
-		return rc, gqlerror.List{err}
+		// convert err to gqlerror.Error type
+		gqlErr := gqlerror.Errorf(err.Error())
+		errcode.Set(gqlErr, errcode.ValidationFailed)
+		return nil, gqlerror.List{gqlErr}
 	}
 	rc.Stats.Validation.End = graphql.Now()
 
